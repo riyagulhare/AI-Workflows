@@ -1,0 +1,554 @@
+{
+  "name": "Customer Feedback",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an AI assistant analyzing user feedback.\n\nRules you MUST follow:\n- Return ONLY valid JSON\n- Do NOT use markdown\n- Do NOT use ```json\n- Do NOT add explanations or extra text\n\nTasks:\n1. Classify feedback into ONE category:\n   - Complaint\n   - Compliment\n   - Feature Addition Request\n\n2. Detect sentiment:\n   - Very Negative\n   - Negative\n   - Neutral\n   - Positive\n   - Very Positive\n\n3. Provide a one-line summary.\n\nReturn output strictly in this format:\n{\n  \"category\": \"\",\n  \"sentiment\": \"\",\n  \"summary\": \"\"\n}\nFeedback: {{ $json.Feedback }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -656,
+        112
+      ],
+      "id": "4c5a2464-d16b-40c7-87d3-e990251eb8d8",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -80,
+        -32
+      ],
+      "id": "0b14db67-fac0-4870-a3cb-e725e75f3f47",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "3de2cb69-b5c9-4e6f-8e7d-694899f2231f",
+                    "leftValue": "={{ $json.category }}",
+                    "rightValue": "Complaint",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "46b6a8e4-528e-4ce6-9cc6-fe3f714ee009",
+                    "leftValue": "={{ $json.category }}",
+                    "rightValue": "Compliment",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "1a1ea532-dc50-48ad-b3f1-e56001a17844",
+                    "leftValue": "={{ $json.category }}",
+                    "rightValue": "=Feature Addition Request",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        144,
+        -48
+      ],
+      "id": "9fc8773e-b12f-4563-8194-aa1745162b38",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d8116274-4abc-4d0f-a3df-3b4b2356cf70",
+              "leftValue": "={{$json.sentiment}}",
+              "rightValue": "Very Negative",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        368,
+        -240
+      ],
+      "id": "f826d5ef-16a3-4e5b-9fc4-6b6e5da29841",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d8116274-4abc-4d0f-a3df-3b4b2356cf70",
+              "leftValue": "={{$json.sentiment}}",
+              "rightValue": "Very Negative",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        368,
+        192
+      ],
+      "id": "2b3dcee0-acd8-4132-98a6-b8f955b4afc5",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -592,
+        336
+      ],
+      "id": "a61b53e6-7da1-4181-92e5-d5c8fde4d59a",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "qinuNuzvvqMt1qAb",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        592,
+        -240
+      ],
+      "id": "5b376b76-43b9-4aaf-8621-efc732c47179",
+      "name": "Send a message",
+      "webhookId": "8116c842-2624-4e9a-a4f1-64e622651e87",
+      "credentials": {
+        "slackApi": {
+          "id": "luYoEQ0Zeg1l6fW7",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1YvUQFIH-uRF9oGJNUtqg7sVrxfPFN1AIqlYqGOZTPD4",
+          "mode": "list",
+          "cachedResultName": "User Feedback",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YvUQFIH-uRF9oGJNUtqg7sVrxfPFN1AIqlYqGOZTPD4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YvUQFIH-uRF9oGJNUtqg7sVrxfPFN1AIqlYqGOZTPD4/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $json.Name }}",
+            "Email": "={{ $json.Email }}",
+            "Category": "={{ $json.category }}",
+            "Sentiment": "={{ $json.sentiment }}",
+            "Summary": "={{ $json.summary }}",
+            "Feedback": "={{ $json.Feedback }}",
+            "Date": "={{ $json.submittedAt }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sentiment",
+              "displayName": "Sentiment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "displayName": "Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Feedback",
+              "displayName": "Feedback",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        592,
+        -32
+      ],
+      "id": "f8720126-1b87-435e-97aa-585b1b7f96f8",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "uppMVnK5jeLM4hE4",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        592,
+        192
+      ],
+      "id": "89b2733b-7682-4148-ac11-c1312cd6b45c",
+      "name": "Send a message1",
+      "webhookId": "d907e185-791f-4065-8e28-3d88542952b8",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "lU0aqor04lpntuiG",
+          "name": "Slack account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Customer Feedback",
+        "formDescription": "Form to collect customer feedback",
+        "formFields": {
+          "values": [
+            {
+              "fieldName": "Name",
+              "fieldLabel": "Name",
+              "requiredField": true
+            },
+            {
+              "fieldName": "Email",
+              "fieldLabel": "Enter Email",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldName": "Feedback",
+              "fieldLabel": "Feedback",
+              "fieldType": "textarea"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.4,
+      "position": [
+        -880,
+        -32
+      ],
+      "id": "5f597811-22de-4e5c-9170-dd2034b769c7",
+      "name": "Feedback Form",
+      "webhookId": "3f66f1dc-885a-4856-9471-5e95e58c71d3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// The AI response is a JSON string inside $json.output\nconst parsed = JSON.parse($json.output);\n\n// Return parsed JSON as top-level fields\nreturn [\n  {\n    category: parsed.category,\n    sentiment: parsed.sentiment,\n    summary: parsed.summary\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        112
+      ],
+      "id": "c738cc9f-a8c2-4bee-ad2e-26a4fdab37fa",
+      "name": "Parse"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Parse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        []
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Feedback Form": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "0880d800-5989-4039-8a7e-ede0fd5ea585",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6fdabfb3425051a03838967ed50d4350dc827cfd636ffc6821f571ab320d29a1"
+  },
+  "id": "KuqTtWOesreLopep",
+  "tags": []
+}
