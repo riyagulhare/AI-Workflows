@@ -1,0 +1,195 @@
+{
+  "name": "Meeting Transcript",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an AI assistant that analyzes meeting transcripts.\n\nMeeting Title:\n{{ $json.meeting_title || \"Meeting Summary\" }}\n\nTasks:\n1. Extract key decisions\n2. List action items\n3. Assign owners if mentioned\n4. Add deadlines if mentioned or implied\n\nReturn ONLY valid JSON in the schema below.\n\nSchema:\n{\n  \"meeting_title\": \"string\",\n  \"key_decisions\": [\"string\"],\n  \"action_items\": [\n    {\n      \"task\": \"string\",\n      \"owner\": \"string\",\n      \"deadline\": \"string\"\n    }\n  ]\n}\n\nTranscript:\n{{ $json['Meeting Transcript']}}\n\nReturn ONLY valid JSON.\nDo not include any explanation, heading, or text outside the JSON object.\nSTRICT JSON INSTRUCTIONS:\n- Return a single valid JSON object only.\n- Include these keys exactly: \"meeting_title\", \"key_decisions\", \"action_items\".\n- \"key_decisions\" and \"action_items\" must always be arrays.\n- Each object in \"action_items\" must have \"task\", \"owner\", and \"deadline\".\n- Do NOT include any text or commentary outside the JSON object.\n- If there are no decisions or actions, return empty arrays.\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -496,
+        -304
+      ],
+      "id": "f8d0acbd-a0cc-4194-8cbe-7b368f08ac0a",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "meta-llama/llama-4-maverick-17b-128e-instruct",
+        "options": {
+          "temperature": 0.5
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -528,
+        -112
+      ],
+      "id": "a90e1d85-e1e8-4f1a-b50a-74838809a59a",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "qinuNuzvvqMt1qAb",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the output from the previous node\nlet output = $input.item.json.output;\n\n// Remove markdown code blocks (```json, ```, etc.)\noutput = output.replace(/```json\\n?/g, '').replace(/```\\n?/g, '');\n\n// Trim whitespace\noutput = output.trim();\n\n// Fix the corrupted data by removing the repeated \"Page\" and \"mission\" text\n// This regex finds the pattern and cleans it up\noutput = output.replace(/\"owner\":\\s*\"[^\"]*?(Page|mission|era|-de|готов|поste|deprecated|missionary)[^\"]*\"/g, function(match) {\n  // Extract just the actual name before the corruption\n  let cleanMatch = match.match(/\"owner\":\\s*\"([A-Za-z]+)/);\n  if (cleanMatch && cleanMatch[1]) {\n    return '\"owner\": \"' + cleanMatch[1] + '\"';\n  }\n  return '\"owner\": \"Unassigned\"';\n});\n\n// Also fix any corrupted deadline fields\noutput = output.replace(/\"deadline\":\\s*\"[^\"]*?(Page|mission|era|-de|готов|поste|deprecated|missionary)[^\"]*\"/g, '\"deadline\": \"Not specified\"');\n\n// Parse the cleaned JSON\ntry {\n  const parsedData = JSON.parse(output);\n  return parsedData;\n} catch (error) {\n  // If parsing still fails, return error info for debugging\n  return {\n    error: \"JSON parsing failed\",\n    errorMessage: error.message,\n    cleanedOutput: output,\n    originalOutput: $input.item.json.output\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -144,
+        -304
+      ],
+      "id": "7aa5c7ef-d9ee-4dd2-87a0-15d9dcadeb15",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $node[\"Form to submit meeting transcripts\"].json.Email }}",
+        "subject": "=Meeting Summary – {{ $json.meeting_title }}",
+        "message": "=<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\" />\n  <style>\n    body {\n      font-family: Arial, sans-serif;\n      color: #333333;\n      line-height: 1.6;\n    }\n    h2 {\n      color: #1a73e8;\n    }\n    ul {\n      padding-left: 20px;\n    }\n    table {\n      border-collapse: collapse;\n      width: 100%;\n      margin-top: 10px;\n    }\n    th, td {\n      border: 1px solid #dddddd;\n      padding: 8px;\n      text-align: left;\n    }\n    th {\n      background-color: #f2f2f2;\n    }\n  </style>\n</head>\n\n<body>\n\n  <h2>📌 Meeting Summary</h2>\n\n  <p><strong>Meeting Title:</strong> {{ $json.meeting_title }}</p>\n\n  <h3>✅ Key Decisions</h3>\n  <ul>\n    {{\n      $json.key_decisions\n        .map(decision => `<li>${decision}</li>`)\n        .join('')\n    }}\n  </ul>\n\n  <h3>📝 Action Items</h3>\n\n  <table>\n    <thead>\n      <tr>\n        <th>Task</th>\n        <th>Owner</th>\n        <th>Deadline</th>\n      </tr>\n    </thead>\n    <tbody>\n      {{\n        $json.action_items\n          .map(item => `\n            <tr>\n              <td>${item.task}</td>\n              <td>${item.owner}</td>\n              <td>${item.deadline}</td>\n            </tr>\n          `)\n          .join('')\n      }}\n    </tbody>\n  </table>\n\n  <br />\n\n  <p>Regards,<br/>\n  <strong>Meeting Assistant</strong></p>\n\n</body>\n</html>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        112,
+        -304
+      ],
+      "id": "8d71d152-c7f7-48d9-aa08-06dbd5bc6e7e",
+      "name": "Send a message",
+      "webhookId": "53b327b0-4fea-4abf-8ec9-71ec211f9c81",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "FCTEJeXrzhYk8Ee7",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Meeting Transcripts",
+        "formDescription": "Form to upload meeting transcripts ",
+        "formFields": {
+          "values": [
+            {
+              "fieldName": "Name",
+              "fieldLabel": "Name",
+              "requiredField": true
+            },
+            {
+              "fieldName": "Email",
+              "fieldLabel": "Email Id",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldName": "Meeting Transcript",
+              "fieldLabel": "Upload meeting transcripts here",
+              "fieldType": "textarea",
+              "requiredField": true
+            },
+            {
+              "fieldName": "Meeting Title",
+              "fieldLabel": "meeting_title",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.4,
+      "position": [
+        -784,
+        -304
+      ],
+      "id": "74316282-3cdd-48a2-a551-bf51eff38f3c",
+      "name": "Form to submit meeting transcripts",
+      "webhookId": "1c2359bc-03a0-44e6-8191-5e127eadcdb0"
+    }
+  ],
+  "pinData": {
+    "Form to submit meeting transcripts": [
+      {
+        "json": {
+          "Name": "Riya",
+          "Email": "riya10133@gmail.com",
+          "Meeting Transcript": "Meeting: Product Strategy Weekly Sync\r\nDate: January 4, 2026\r\nAttendees: Riya, Ankit, Priya, Design Team, Marketing Team\r\n\r\nDiscussion:\r\n\r\n1. Onboarding Revamp\r\n- Riya shared current onboarding metrics.\r\n- Team decided to **delay the new onboarding rollout by one sprint** to address QA issues.\r\n- **Action:** Riya to prepare a revised rollout plan.\r\n- **Deadline:** January 10, 2026.\r\n- **Owner:** Riya\r\n\r\n2. Design Mockups\r\n- Design team needs to finalize updated onboarding mockups.\r\n- **Action:** Design team to submit final mockups for review.\r\n- **Deadline:** January 8, 2026.\r\n- **Owner:** Design Team\r\n\r\n3. Marketing Alignment\r\n- Marketing highlighted the upcoming campaign launch.\r\n- Decision: **Campaign will proceed as planned**, but messaging will reflect delayed onboarding.\r\n- **Action:** Marketing to update campaign messaging.\r\n- **Deadline:** January 9, 2026.\r\n- **Owner:** Marketing Team\r\n\r\n4. QA Coordination\r\n- Ankit will coordinate with QA to ensure all critical bugs are fixed before the sprint ends.\r\n- **Action:** QA testing and bug fixes.\r\n- **Deadline:** Before January 12, 2026.\r\n- **Owner:** Ankit\r\n\r\n5. Next Steps\r\n- Review progress again in next weekly sync.\r\n\r\nSummary:\r\n- Key decisions: Onboarding rollout delayed, campaign proceeds with updated messaging.\r\n- Action items assigned with owners and deadlines as above.\r\n",
+          "Meeting Title": "Standup",
+          "submittedAt": "2026-01-04T05:19:36.441-05:00",
+          "formMode": "test"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Form to submit meeting transcripts": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "aa13d157-8b97-4f33-8099-6c9052cd6003",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6fdabfb3425051a03838967ed50d4350dc827cfd636ffc6821f571ab320d29a1"
+  },
+  "id": "xulZfqZwI9hlaVQO",
+  "tags": []
+}
