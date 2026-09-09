@@ -1,0 +1,476 @@
+{
+  "name": "D2C",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        192
+      ],
+      "id": "4ef52341-452f-4897-be8a-e0f1e4c6c585",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rQIgCBuXYAiN6GB1sX0eifUyuCp9ZmLG9CFHcfYMEiE",
+          "mode": "list",
+          "cachedResultName": "d2c_return_data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rQIgCBuXYAiN6GB1sX0eifUyuCp9ZmLG9CFHcfYMEiE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 96210335,
+          "mode": "list",
+          "cachedResultName": "d2c_return_data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rQIgCBuXYAiN6GB1sX0eifUyuCp9ZmLG9CFHcfYMEiE/edit#gid=96210335"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -384,
+        192
+      ],
+      "id": "87fbd8b5-f14c-4b65-b268-129966c80dc5",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ZNlj2PAOuS6EPSlT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "69e7bae9-9e9d-4451-b424-bb34f86d663d",
+              "leftValue": "={{ $json.Return_Flag }}",
+              "rightValue": "Yes",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -128,
+        192
+      ],
+      "id": "9492ef10-093c-46c2-aab2-2a53f63f6890",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        160,
+        16
+      ],
+      "id": "6a9be4ab-fd48-4ec8-a10e-430f7cf1184d",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        160,
+        208
+      ],
+      "id": "42c70e59-a0b9-4568-b236-62ca0177c83b",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d7432983-1d10-47f7-b4b9-2a46e3547756",
+              "name": "comment",
+              "value": "=Reason: {{$json[\"Return_Reason\"]}}\nComment: {{$json[\"Customer_Comment\"]}}\n",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        208
+      ],
+      "id": "794a86f0-01b5-4949-aff1-14e8c19ba5e6",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an E-commerce Returns Analyst.\n\nYou analyze customer order issues to generate structured insights for business teams.\n\n---\n\nINPUT FORMAT:\nYou will receive one record with:\n- Order_ID\n- Product\n- Category\n- Comment\n\n---\n\nYOUR TASK:\n1. Read the Comment carefully\n2. Identify ALL relevant issue categories\n3. Retain EXACT product details from input\n4. Generate a short business-friendly summary\n\n---\n\nALLOWED ISSUE CATEGORIES:\n- Delivery Issue\n- Size Issue\n- Quality Issue\n- Packaging Issue\n- Wrong Item\n- Missing Item\n- Other\n\n---\n\nIMPORTANT RULES:\n- Use ONLY the provided input data (no assumptions, no fake data)\n- Do NOT change product name or category\n- Do NOT create multiple outputs\n- Do NOT generate examples or code\n- If no issue is clear, return [\"Other\"]\n\n---\n\nOUTPUT FORMAT (STRICT JSON):\n{\n  \"order_id\": \"<copy Order_ID exactly>\",\n  \"product_name\": \"<copy Product exactly>\",\n  \"product_category\": \"<copy Category exactly>\",\n  \"issues\": [\"<issue1>\", \"<issue2>\"],\n  \"summary\": \"<clear 1-line insight based on comment>\"\n}\n\n---\n\nINPUT:\nOrder_ID: {{ $json[\"Order_ID\"] }}\nProduct: {{ $json[\"Product\"] }}\nCategory: {{ $json[\"Category\"] }}\nComment: {{ $json[\"comment\"] }}\n\n---\n\nOUTPUT:",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        384,
+        -192
+      ],
+      "id": "2a0553ab-19b2-4418-b844-89bc635b6151",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        464,
+        32
+      ],
+      "id": "abbc593b-14c3-48e7-9e93-8cb826472906",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "HxeiQD1yhrbmwfsf",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  return {\n    json: JSON.parse(item.json.output)\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        -96
+      ],
+      "id": "cb4bf787-0e92-4cf6-9a11-d68ac6954d2a",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "const result = {};\n\nitems.forEach(item => {\n  const product = item.json.product_name;\n  const category = item.json.product_category;\n  const issues = item.json.issues || [];\n\n  if (!result[product]) {\n    result[product] = {\n      product_name: product,\n      product_category: category,\n      total_issues: 0,\n      issue_map: {}\n    };\n  }\n\n  issues.forEach(issue => {\n    if (!issue) return; // safety check\n\n    if (!result[product].issue_map[issue]) {\n      result[product].issue_map[issue] = 0;\n    }\n\n    result[product].issue_map[issue] += 1;\n    result[product].total_issues += 1;\n  });\n});\n\nreturn Object.values(result).map(product => ({\n  json: {\n    product_name: product.product_name,\n    product_category: product.product_category,\n    total_issues: product.total_issues,\n    issues: Object.entries(product.issue_map).map(([issue, count]) => ({\n      issue,\n      count\n    }))\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        -96
+      ],
+      "id": "c4f13cd2-6191-4490-9f66-bb8172144082",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const data = item.json;\n  const total = data.total_issues;\n\n  let topIssue = \"\";\n  let maxCount = 0;\n\n  const issuesWithPercent = data.issues.map(i => {\n    const percent = ((i.count / total) * 100).toFixed(1);\n\n    if (i.count > maxCount) {\n      maxCount = i.count;\n      topIssue = i.issue;\n    }\n\n    return {\n      issue: i.issue,\n      count: i.count,\n      percentage: percent + \"%\"\n    };\n  });\n\n  return {\n    json: {\n      product_name: data.product_name,\n      product_category: data.product_category,\n      total_issues: total,\n      top_issue: topIssue,\n      issues: issuesWithPercent\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        -96
+      ],
+      "id": "b099e500-4390-413a-ae2e-9da5459a0e32",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a senior product analyst at an e-commerce company.\n\nYour goal is to generate sharp, non-generic, data-driven insights and recommendations.\n\nSTRICT RULES:\n- Return ONLY valid JSON\n- Do NOT leave any field empty\n- Recommendations must be SPECIFIC and ACTIONABLE (no generic advice)\n- Base reasoning on issue distribution and percentages\n\nGUIDELINES:\n- Insight: Explain what the issue pattern reveals about product, operations, or customer experience\n- Recommendation: Suggest a concrete action (feature, process change, or experiment)\n- Avoid generic phrases like \"improve quality\" or \"enhance experience\"\n\nReturn this structure:\n\n{\n  \"product\": \"\",\n  \"product_category\": \"\",\n  \"total_issues\": 0,\n  \"top_issue\": \"\",\n  \"issues\": [\n    {\n      \"issue\": \"\",\n      \"count\": 0,\n      \"percentage\": \"\"\n    }\n  ],\n  \"insight\": \"\",\n  \"recommendation\": \"\"\n}\n\nInput:\nProduct: {{ $json[\"product_name\"] }}\nProduct_Category: {{ $json[\"product_category\"] }}\nTotal_Issues: {{ $json[\"total_issues\"] }}\nTop_Issue: {{ $json[\"top_issue\"] }}\nIssue_Breakdown: {{$json[\"issues\"] }}\n\nNow generate highly specific, non-generic output.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1408,
+        -96
+      ],
+      "id": "17427e4f-fa58-44eb-af7d-386365d73460",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1488,
+        144
+      ],
+      "id": "119eff93-7593-415b-b3bd-980fdd7eb553",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "HxeiQD1yhrbmwfsf",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const raw = item.json.output;\n\n  let parsed;\n\n  try {\n    parsed = JSON.parse(raw);\n  } catch (error) {\n    parsed = {\n      error: \"Invalid JSON\",\n      raw_output: raw\n    };\n  }\n\n  return {\n    json: parsed\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        -96
+      ],
+      "id": "3ca33e1c-b474-4876-ad60-216cce4ee18f",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "tableId": "product_insights",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "product_name",
+              "fieldValue": "={{ $json.product }}"
+            },
+            {
+              "fieldId": "product_category",
+              "fieldValue": "={{ $json.product_category }}"
+            },
+            {
+              "fieldId": "total_issues",
+              "fieldValue": "={{ $json.total_issues }}"
+            },
+            {
+              "fieldId": "top_issue",
+              "fieldValue": "={{ $json.top_issue }}"
+            },
+            {
+              "fieldId": "issues",
+              "fieldValue": "={{ $json[\"issues\"] }}"
+            },
+            {
+              "fieldId": "insight",
+              "fieldValue": "={{ $json.insight }}"
+            },
+            {
+              "fieldId": "recommendation",
+              "fieldValue": "={{ $json.recommendation }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1968,
+        -96
+      ],
+      "id": "8a93c47b-ad09-4d17-b632-5dfb16afb920",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "dzf6MXCR9VlpFntX",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "246f6f43-faa8-456a-adbe-b7cd2d2110f4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "48b69bddcb07065d0c25f9dca177ecf6f0d0eef30981d910ff5b2687bb58fa87"
+  },
+  "id": "cTMkcKrERZZf1DB8",
+  "tags": []
+}
